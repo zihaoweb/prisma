@@ -7,36 +7,80 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Category {
-  id   Int    @id @default(autoincrement())
-  name String @unique
-  Post Post[]
-}
-
-model Post {
-  id        Int        @id @default(autoincrement())
-  title     String
-  published Boolean    @default(true)
-  authorId  Int
-  comments  Json?
-  views     Int        @default(0)
-  likes     Int        @default(0)
-  User      User       @relation(fields: [authorId], references: [id])
-  Category  Category[]
-
-  @@index([authorId], map: "Post_authorId_fkey")
-}
-
+// 用户表
 model User {
-  id           Int       @id @default(autoincrement())
-  email        String    @unique
-  name         String?
-  profileViews Int       @default(0)
-  role         User_role @default(USER)
-  Post         Post[]
+  id          String   @id @default(cuid())
+  unionid     String   @db.VarChar(100)
+  openid      String   @db.VarChar(100)
+  openid_coll String   @db.VarChar(100)
+  phone       String   @db.VarChar(11)
+  nickname    String   @db.VarChar(45)
+  avatar_url  String   @db.MediumText
+  type        String   @db.VarChar(20)
+  created_at  DateTime @default(now())
+
+  orders     Order[]
+  AIService  AIService?
+  DocService DocService?
+  Member     Member[]
 }
 
-enum User_role {
-  USER
-  ADMIN
+// 订单表
+model Order {
+  id             String   @id @default(cuid()) // id
+  user           User     @relation(fields: [user_id], references: [id]) // 关联外键
+  user_id        String // 关联外键id
+  payer_id       String   @db.VarChar(50) // 订单的支付金额的人id
+  order_number   String   @unique // 订单号
+  status         String   @db.VarChar(3) // 支付状态 01 成功 | 02 | 取消 | 03 超时取消 | 04 失败 
+  amount         Float // 支付金额
+  order_mode     String   @db.VarChar(3) // 01 普通订单 | 02 加急订单 | 03 单次订单
+  order_type     String   @db.VarChar(3) // 01 Ai订单 | 02 医生订单
+  description    String   @db.VarChar(100) // 描述
+  currentcy      String   @db.VarChar(10) // 货币类型
+  transaction_id String   @db.VarChar(50) // 交易订单号
+  trade_status   String   @db.VarChar(20) // 交易状态
+  success_at     DateTime // 交易成功时间
+  cancel_at      String   @db.VarChar(50) // 订单取消时间
+  created_at     DateTime @default(now()) // 订单创建时间
+}
+
+// AI权益表
+model AIService {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [user_id], references: [id])
+  user_id    String   @unique
+  is_active  Boolean  @default(false)
+  start_date DateTime
+  end_data   DateTime
+}
+
+// Doc权益表
+model DocService {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [user_id], references: [id])
+  user_id   String   @unique
+  total_num Int // 总次数
+  curr_num  Int // 当前次数
+  use_num   Int // 使用次数
+  create_at DateTime @default(now())
+}
+
+//成员表
+model Member {
+  id              String   @id @default(cuid()) // 唯一标识符
+  name            String   @db.VarChar(100) // 姓名，必填
+  sex             Int // 性别，必填
+  birth           DateTime // 出生日期，必填
+  avatar_url      String?  @db.MediumText // 成员头像
+  phone           String?  @db.VarChar(11) // 可选，手机号
+  relationship    String?  @db.VarChar(10) // 可选，关系
+  emergency_name  String?  @db.VarChar(100) // 可选，紧急联系人姓名
+  emergency_phone String?  @db.VarChar(11) // 可选，紧急联系人手机号
+  emergency_rela  String?  @db.VarChar(10) // 可选，紧急联系人关系
+  is_delete       String   @db.VarChar(2) // 是否已删除 0 未删除 | 1 已删除
+  create_at       DateTime @default(now())
+  update_at       DateTime @updatedAt
+  user            User     @relation(fields: [user_id], references: [id])
+  user_id         String
 }

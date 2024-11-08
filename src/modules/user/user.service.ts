@@ -1,26 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { AxiosService } from '../axios/axios.service';
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  private readonly config: Record<string, any>;
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly axiosService: AxiosService
+  ) { }
+
+  async create(createUserDto: any) {
+    return '123'
   }
 
-  findAll() {
-    return `This action returns all user`;
+  async login(code: string) {
+    const res = await this.axiosService.getUserInfoByCode(code)
+    console.log('login', res)
+    return res
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async getPhone(code: string) {
+    const res = await this.axiosService.getUserPhone(code)
+    console.log('getPhone', res)
+    return res
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
-  }
 }
